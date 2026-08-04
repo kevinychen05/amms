@@ -1,0 +1,29 @@
+# Goal: a high-level task command, e.g. "move the red mug to the table", given to
+# mission_executive_node. Structured input rather than free-text NLP (see Phase 6).
+# Modeled as an action so an operator/caller gets live progress via MissionStatus
+# feedback and can cancel a mission in progress -- a service would block with no
+# feedback and no way to abort.
+
+string object_class
+# Target object category to search for and detect, e.g. "red_mug". Matched against
+# DetectedObject.class_label.
+
+geometry_msgs/PoseStamped destination_pose
+# Where to place the object, in the map frame.
+
+---
+
+bool success
+# True only if the mission reached the COMPLETE state.
+
+string final_state
+# The terminal MissionStatus.state value (e.g. "COMPLETE" or "FAILED").
+
+string message
+# Human-readable summary of the outcome.
+
+---
+
+MissionStatus status
+# Live status updates as the mission progresses; identical in shape to what's
+# published on /mission_manager/status.

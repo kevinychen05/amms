@@ -1,0 +1,33 @@
+# Goal: ask grasp_planner_node to grasp a specific detected object and transport it
+# to a destination pose. Modeled as an action (not a service) because grasping is a
+# long-running, multi-step operation (approach, grasp, transport, place) that can fail
+# partway and that mission_executive_node needs to be able to monitor and cancel.
+
+geometry_msgs/PoseStamped target_pose
+# Pose of the object to grasp, in the map frame (copied from DetectedObject.pose).
+
+float32[3] object_dimensions
+# Approximate object extent (x, y, z) in meters (copied from DetectedObject.bounding_box_size).
+
+geometry_msgs/PoseStamped place_pose
+# Destination pose to place the object after grasping, in the map frame.
+
+---
+
+bool success
+# True only if the object was grasped, transported, and placed successfully.
+
+string message
+# Human-readable result, or failure reason if success is false.
+
+geometry_msgs/PoseStamped final_grasp_pose
+# The grasp pose that was actually executed (may differ from a naive centroid pose
+# once grasp pose generation applies its heuristic).
+
+---
+
+string stage
+# Current stage: "planning" | "approaching" | "grasping" | "transporting" | "placing".
+
+float32 progress
+# Rough progress within the current stage, range [0.0, 1.0].
