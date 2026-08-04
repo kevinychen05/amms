@@ -1,0 +1,26 @@
+# ROS 2 / colcon build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# C++ build output
+*.o
+*.so
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Recorded bag files / SQLite databases (can be large, regenerate rather than commit)
+*.bag
+*.db3
