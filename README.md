@@ -33,7 +33,7 @@ ROS 2 Jazzy was chosen over Humble because it pairs natively with Gazebo Harmoni
 
 ## Branching strategy
 
-- `main` is protected: no direct pushes, all changes land via pull request.
+- `main` is treated as protected by convention: no direct pushes, all changes land via pull request. (GitHub's server-side branch protection requires a public repo or paid plan for private repos, so this is currently self-enforced rather than platform-enforced.)
 - One feature branch per unit of work, named `phase-N/short-description` (e.g. `phase-0/architecture`).
 - PRs are used even as a solo developer, to build the habit and keep history reviewable.
 
