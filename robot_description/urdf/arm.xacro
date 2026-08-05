@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 6-DOF arm chain: base_yaw -> shoulder_pitch -> elbow_pitch ->
+       wrist_roll -> wrist_pitch -> wrist_roll_2. Unlike the wheels, no two
+       arm links are the same size or purpose, so there's no natural
+       repeated pattern to wrap in a macro here, so each link is written out
+       explicitly, still using the shared box_inertia macro from
+       inertial_macros.xacro so no inertia tensor is hand-computed. -->
+
+  <xacro:property name="link1_height" value="0.06"/>
+  <xacro:property name="link1_side" value="0.08"/>
+  <xacro:property name="link1_mass" value="0.3"/>
+
+  <xacro:property name="upper_arm_length" value="0.25"/>
+  <xacro:property name="upper_arm_side" value="0.05"/>
+  <xacro:property name="upper_arm_mass" value="0.5"/>
+
+  <xacro:property name="forearm_length" value="0.20"/>
+  <xacro:property name="forearm_side" value="0.04"/>
+  <xacro:property name="forearm_mass" value="0.3"/>
+
+  <xacro:property name="wrist1_length" value="0.04"/>
+  <xacro:property name="wrist1_side" value="0.04"/>
+  <xacro:property name="wrist1_mass" value="0.1"/>
+
+  <xacro:property name="wrist2_length" value="0.04"/>
+  <xacro:property name="wrist2_side" value="0.04"/>
+  <xacro:property name="wrist2_mass" value="0.1"/>
+
+  <xacro:property name="gripper_mount_length" value="0.03"/>
+  <xacro:property name="gripper_mount_width" value="0.06"/>
+  <xacro:property name="gripper_mount_mass" value="0.1"/>
+
+  <!-- Joint 1: base_yaw. Mounts on top of the chassis, rotates the whole
+       arm about the vertical (Z) axis. -->
+  <joint name="base_yaw_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 ${chassis_height}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.9671" upper="2.9671" effort="20.0" velocity="2.0"/>
+  </joint>
+
+  <link name="link1">
+    <visual>
+      <origin xyz="0 0 ${link1_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${link1_side} ${link1_side} ${link1_height}"/>
+      </geometry>
+      <material name="chassis_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${link1_height/2}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${link1_side} ${link1_side} ${link1_height}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${link1_mass}" x="${link1_side}" y="${link1_side}" z="${link1_height}"
+      origin_xyz="0 0 ${link1_height/2}" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Joint 2: shoulder_pitch. Tips the upper arm forward/back. Every
+       subsequent arm link extends along its own local +X axis, so a pitch
+       joint (axis Y) tips that +X reach direction up/down. -->
+  <joint name="shoulder_pitch_joint" type="revolute">
+    <parent link="link1"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0 ${link1_height}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="20.0" velocity="2.0"/>
+  </joint>
+
+  <link name="upper_arm_link">
+    <visual>
+      <origin xyz="${upper_arm_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${upper_arm_length} ${upper_arm_side} ${upper_arm_side}"/>
+      </geometry>
+      <material name="chassis_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="${upper_arm_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${upper_arm_length} ${upper_arm_side} ${upper_arm_side}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${upper_arm_mass}" x="${upper_arm_length}" y="${upper_arm_side}" z="${upper_arm_side}"
+      origin_xyz="${upper_arm_length/2} 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Joint 3: elbow_pitch. 0 = straight arm; only bends one direction,
+       like a real elbow. -->
+  <joint name="elbow_pitch_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin xyz="${upper_arm_length} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="2.5" effort="15.0" velocity="2.0"/>
+  </joint>
+
+  <link name="forearm_link">
+    <visual>
+      <origin xyz="${forearm_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${forearm_length} ${forearm_side} ${forearm_side}"/>
+      </geometry>
+      <material name="chassis_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="${forearm_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${forearm_length} ${forearm_side} ${forearm_side}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${forearm_mass}" x="${forearm_length}" y="${forearm_side}" z="${forearm_side}"
+      origin_xyz="${forearm_length/2} 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Joint 4: wrist_roll. Rolls about the forearm's own long axis (X).
+       Like the wheels, a roll joint has no natural mechanical stop, so
+       it's continuous rather than revolute. -->
+  <joint name="wrist_roll_joint" type="continuous">
+    <parent link="forearm_link"/>
+    <child link="wrist1_link"/>
+    <origin xyz="${forearm_length} 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="5.0" velocity="3.0"/>
+  </joint>
+
+  <link name="wrist1_link">
+    <visual>
+      <origin xyz="${wrist1_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${wrist1_length} ${wrist1_side} ${wrist1_side}"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+    <collision>
+      <origin xyz="${wrist1_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${wrist1_length} ${wrist1_side} ${wrist1_side}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${wrist1_mass}" x="${wrist1_length}" y="${wrist1_side}" z="${wrist1_side}"
+      origin_xyz="${wrist1_length/2} 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Joint 5: wrist_pitch. Tips the gripper up/down. Together with
+       wrist_roll before it and wrist_roll_2 after it, this forms a
+       "spherical wrist", where the three wrist axes intersect at one point,
+       which is what makes closed-form inverse kinematics possible for
+       arms shaped like this. -->
+  <joint name="wrist_pitch_joint" type="revolute">
+    <parent link="wrist1_link"/>
+    <child link="wrist2_link"/>
+    <origin xyz="${wrist1_length} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.745" upper="1.745" effort="5.0" velocity="3.0"/>
+  </joint>
+
+  <link name="wrist2_link">
+    <visual>
+      <origin xyz="${wrist2_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${wrist2_length} ${wrist2_side} ${wrist2_side}"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+    <collision>
+      <origin xyz="${wrist2_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${wrist2_length} ${wrist2_side} ${wrist2_side}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${wrist2_mass}" x="${wrist2_length}" y="${wrist2_side}" z="${wrist2_side}"
+      origin_xyz="${wrist2_length/2} 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Joint 6: wrist_roll_2. Final orientation adjustment / gripper roll,
+       about the gripper's own approach axis. Also continuous, same
+       reasoning as wrist_roll. -->
+  <joint name="wrist_roll_2_joint" type="continuous">
+    <parent link="wrist2_link"/>
+    <child link="gripper_mount_link"/>
+    <origin xyz="${wrist2_length} 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="5.0" velocity="3.0"/>
+  </joint>
+
+  <link name="gripper_mount_link">
+    <visual>
+      <origin xyz="${gripper_mount_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${gripper_mount_length} ${gripper_mount_width} ${gripper_mount_width}"/>
+      </geometry>
+      <material name="chassis_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="${gripper_mount_length/2} 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${gripper_mount_length} ${gripper_mount_width} ${gripper_mount_width}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${gripper_mount_mass}" x="${gripper_mount_length}" y="${gripper_mount_width}" z="${gripper_mount_width}"
+      origin_xyz="${gripper_mount_length/2} 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Step 4 (part 2) will add: gripper.xacro attaches its two fingers to
+       gripper_mount_link. -->
+
+</robot>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<robot name="amms_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="materials.xacro"/>
+  <xacro:include filename="base.xacro"/>
+  <xacro:include filename="arm.xacro"/>
+  <xacro:include filename="gripper.xacro"/>
+
+</robot>

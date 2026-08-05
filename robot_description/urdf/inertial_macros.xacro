@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Standard rigid-body inertia formulas for uniform-density primitives.
+       origin_xyz/origin_rpy must match the same link's visual/collision
+       origins exactly, so the inertia tensor (computed here assuming the
+       shape's natural axis alignment) is expressed in the correct
+       orientation once the URDF parser applies this origin. -->
+
+  <xacro:macro name="box_inertia" params="mass x y z origin_xyz origin_rpy">
+    <inertial>
+      <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${(1/12) * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (x*x + z*z)}" iyz="0.0"
+        izz="${(1/12) * mass * (x*x + y*y)}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Assumes the cylinder's symmetry axis is the link's local Z, matching
+       URDF's native <cylinder> primitive convention. If a link rotates its
+       visual/collision geometry (e.g. wheels, to make the axle point along
+       Y), pass that same rotation as origin_rpy here so the tensor rotates
+       along with it. -->
+  <xacro:macro name="cylinder_inertia" params="mass radius length origin_xyz origin_rpy">
+    <inertial>
+      <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${(1/12) * mass * (3*radius*radius + length*length)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (3*radius*radius + length*length)}" iyz="0.0"
+        izz="${0.5 * mass * radius*radius}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="sphere_inertia" params="mass radius origin_xyz origin_rpy">
+    <inertial>
+      <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${(2/5) * mass * radius*radius}" ixy="0.0" ixz="0.0"
+        iyy="${(2/5) * mass * radius*radius}" iyz="0.0"
+        izz="${(2/5) * mass * radius*radius}"/>
+    </inertial>
+  </xacro:macro>
+
+</robot>
