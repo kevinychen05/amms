@@ -4,10 +4,13 @@ project(simulation)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch
+  DIRECTORY launch worlds config rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Phase 2 will add: install(DIRECTORY worlds config DESTINATION share/${PROJECT_NAME})
+install(
+  PROGRAMS scripts/fix_lidar_frame.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()

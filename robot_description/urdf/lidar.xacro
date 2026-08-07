@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="lidar_radius" value="0.04"/>
+  <xacro:property name="lidar_height" value="0.04"/>
+  <xacro:property name="lidar_mass" value="0.15"/>
+
+  <!-- Mounted rear-top of the chassis, opposite the camera, sitting flush
+       on the chassis surface. A 2D lidar needs a full 360-degree view
+       around the robot for navigation, but the arm's base (link1) sits
+       fixed at the chassis's exact center; from a rear mount, link1
+       blocks a small, constant angular wedge of the scan (roughly the
+       width of link1's own small 0.08m footprint as seen from here).
+       This is a real, known limitation, not a bug, and matches a
+       trade-off real mobile manipulators make too; it wasn't worth
+       chasing a mounting position that eliminates it entirely for a
+       simulated robot this size. -->
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="${-(chassis_length/2 - lidar_radius)} 0 ${chassis_height + lidar_height/2}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
+      </geometry>
+    </collision>
+    <xacro:cylinder_inertia
+      mass="${lidar_mass}" radius="${lidar_radius}" length="${lidar_height}"
+      origin_xyz="0 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Unlike the camera, a 2D lidar needs no separate "optical" frame.
+       A LaserScan reports ranges as a function of angle around the
+       sensor's own Z axis, using the same body-style convention (X, or
+       0 radians, pointing straight ahead) as the rest of the robot; there
+       is no separate image-row/column convention to translate to, since
+       a laser scan is not a picture. lidar_link is both the mounting
+       frame and the frame the scan data itself is published in. -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <visualize>true</visualize>
+      <topic>scan</topic>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.1</min>
+          <max>15.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+</robot>

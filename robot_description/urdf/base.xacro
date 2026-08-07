@@ -87,35 +87,45 @@
   <xacro:wheel prefix="left" reflect="1"/>
   <xacro:wheel prefix="right" reflect="-1"/>
 
-  <!-- Caster: a passive support point, simplified as a low-friction sphere
-       rather than a fully-modeled 2-joint swiveling caster mechanism. This
-       is a deliberate simplification, not laziness: a caster's only job is
-       to keep the robot from tipping over, and a frictionless sphere (set
-       up in Gazebo in Phase 2) achieves equivalent behavior for planning
-       and control purposes without the complexity of an extra link/joint
-       pair whose orientation nothing in this project actually needs to
-       know or control. -->
-  <link name="caster_link">
-    <visual>
-      <geometry>
-        <sphere radius="${caster_radius}"/>
-      </geometry>
-      <material name="caster_black"/>
-    </visual>
-    <collision>
-      <geometry>
-        <sphere radius="${caster_radius}"/>
-      </geometry>
-    </collision>
-    <xacro:sphere_inertia
-      mass="${caster_mass}" radius="${caster_radius}"
-      origin_xyz="0 0 0" origin_rpy="0 0 0"/>
-  </link>
+  <!-- Caster macro: instantiated front and rear. A single rear caster was
+       Phase 1's original design, but combined with the wheels (at the
+       chassis's horizontal center) it left the front of the robot with no
+       ground support at all: the arm resting at zero angles extends
+       forward past the wheel axle with nothing underneath it, so its
+       weight has nothing to resist a forward tip. A second, front caster
+       gives a 4-point support polygon (2 wheels + 2 casters) whose
+       footprint stays underneath the combined center of mass regardless
+       of arm pose, which a single caster's 3-point polygon could not
+       guarantee. Each is still a simplified frictionless sphere, not a
+       fully-modeled swiveling caster mechanism, for the same reason as
+       Phase 1: nothing in this project needs to know or control a
+       caster's own orientation, only that it provides ground support. -->
+  <xacro:macro name="caster" params="prefix reflect">
+    <link name="${prefix}_caster_link">
+      <visual>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+        <material name="caster_black"/>
+      </visual>
+      <collision>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+      </collision>
+      <xacro:sphere_inertia
+        mass="${caster_mass}" radius="${caster_radius}"
+        origin_xyz="0 0 0" origin_rpy="0 0 0"/>
+    </link>
 
-  <joint name="caster_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="caster_link"/>
-    <origin xyz="${-chassis_length/2 + caster_radius} 0 ${-(wheel_radius - caster_radius)}" rpy="0 0 0"/>
-  </joint>
+    <joint name="${prefix}_caster_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_caster_link"/>
+      <origin xyz="${reflect * (chassis_length/2 - caster_radius)} 0 ${-(wheel_radius - caster_radius)}" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:caster prefix="front" reflect="1"/>
+  <xacro:caster prefix="rear" reflect="-1"/>
 
 </robot>

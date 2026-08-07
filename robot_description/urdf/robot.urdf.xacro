@@ -5,5 +5,8 @@
   <xacro:include filename="base.xacro"/>
   <xacro:include filename="arm.xacro"/>
   <xacro:include filename="gripper.xacro"/>
+  <xacro:include filename="camera.xacro"/>
+  <xacro:include filename="lidar.xacro"/>
+  <xacro:include filename="gazebo.xacro"/>
 
 </robot>
