@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Model-wide Gazebo system plugins. Plain URDF has no notion of "how
+       does this robot respond to a velocity command"; that behavior
+       has to be supplied separately, which is what these two plugins do.
+
+       DiffDrive: converts /cmd_vel (linear.x, angular.z) into individual
+       left/right wheel velocities, commands the two wheel joints
+       directly, and integrates wheel motion into an odom -> base_footprint
+       transform + Odometry message. This is a SEPARATE concern from the
+       robot's own internal TF chain (base_link -> wheels/arm, published by
+       robot_state_publisher from joint angles): DiffDrive answers "where
+       has the robot moved in the world since it was spawned," which
+       nothing else in this project currently tracks.
+
+       wheel_separation/wheel_radius are read from the same properties
+       base.xacro already defines, not retyped, so they can never silently
+       drift out of sync with the actual collision/visual geometry; a
+       mismatch here wouldn't be visible in how the robot LOOKS like it's
+       moving, only in odometry numbers being systematically wrong. -->
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>${chassis_width + wheel_thickness}</wheel_separation>
+      <wheel_radius>${wheel_radius}</wheel_radius>
+      <topic>cmd_vel</topic>
+      <odom_topic>odom</odom_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+      <tf_topic>tf</tf_topic>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+
+    <!-- Publishes every joint's current angle (wheels AND arm, driven by
+         real physics now, not a GUI slider) onto Gazebo's own transport.
+         This still needs bridging to ROS's /joint_states topic before
+         robot_state_publisher can consume it; that's added in the next step,
+         once we've confirmed the exact Gazebo-side topic name. -->
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+    </plugin>
+  </gazebo>
+
+</robot>

@@ -1,0 +1,80 @@
+# ros_gz_bridge translates between Gazebo's internal transport (gz.msgs.*)
+# and standard ROS 2 message types -- the two are separate middleware
+# stacks that don't talk to each other without this bridge. Topic names
+# and Gazebo-side types below were confirmed empirically via `gz topic -l`
+# / `gz topic -i -t <topic>` against the running sim, not assumed.
+#
+# direction: GZ_TO_ROS for things Gazebo produces that ROS nodes need to
+# read (clock, odometry, joint states, the odom->base_footprint TF from
+# DiffDrive, the RGB-D camera's image/depth/points/camera_info, and the
+# lidar's scan); ROS_TO_GZ for things a ROS node commands and Gazebo acts
+# on (cmd_vel, e.g. from teleop).
+
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/joint_states"
+  gz_topic_name: "/joint_states"
+  ros_type_name: "sensor_msgs/msg/JointState"
+  gz_type_name: "gz.msgs.Model"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/odom"
+  gz_topic_name: "/odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/tf"
+  gz_topic_name: "/tf"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/cmd_vel"
+  gz_topic_name: "/cmd_vel"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "gz.msgs.Twist"
+  direction: ROS_TO_GZ
+
+- ros_topic_name: "/camera/camera_info"
+  gz_topic_name: "/camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/camera/image"
+  gz_topic_name: "/camera/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/camera/depth_image"
+  gz_topic_name: "/camera/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/camera/points"
+  gz_topic_name: "/camera/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS
+
+# Bridged as /scan_raw, not /scan: Gazebo's gpu_lidar sensor has no
+# frame_id override tag (unlike the camera's optical_frame_id), so it
+# always stamps LaserScan messages with its own auto-generated internal
+# name (something like "amms_robot/base_footprint/lidar") instead of our
+# URDF's actual "lidar_link" frame -- a frame that plain doesn't exist in
+# our TF tree. The range/angle data itself is correct; only the label is
+# wrong. scripts/fix_lidar_frame.py republishes this as /scan with the
+# frame_id corrected, so /scan (the name Nav2/slam_toolbox expect in
+# Phase 3) always carries a resolvable frame.
+- ros_topic_name: "/scan_raw"
+  gz_topic_name: "/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS

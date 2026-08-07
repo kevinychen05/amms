@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="camera_size" value="0.03"/>
+  <xacro:property name="camera_mass" value="0.05"/>
+  <xacro:property name="camera_mast_height" value="0.05"/>
+
+  <!-- Mounted front-top of the chassis, level (no downward tilt) and
+       forward-facing. Fixed to the chassis, not the arm, so its view of
+       the room stays stable regardless of arm motion; Phase 3's SLAM
+       and Nav2 need a consistent sensor viewpoint, and coupling the
+       camera to the arm would mean every arm movement also moves the
+       robot's "eyes." -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${chassis_length/2 - camera_size/2} 0 ${chassis_height + camera_mast_height}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="${camera_size} ${camera_size*2} ${camera_size}"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${camera_size} ${camera_size*2} ${camera_size}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia
+      mass="${camera_mass}" x="${camera_size}" y="${camera_size*2}" z="${camera_size}"
+      origin_xyz="0 0 0" origin_rpy="0 0 0"/>
+  </link>
+
+  <!-- Optical frame: no visual/collision/inertial, exists purely as a TF
+       frame (same "TF-only link" pattern as base_footprint in Phase 1).
+       camera_link follows robot-body convention (X=forward, Y=left,
+       Z=up), matching every other link in this URDF. The image/depth
+       data the sensor actually publishes follows a completely different
+       convention (Z=forward into the scene, X=right, Y=down: how image
+       columns/rows and depth naturally map), so a fixed rotation is
+       required between the two. This exact roll=-90deg, yaw=-90deg
+       rotation is the standard, widely-used REP103-to-optical-frame
+       conversion. Getting this rotation wrong, or skipping it and
+       publishing image data under camera_link's own body-convention
+       frame directly, is exactly the "optical frame mismatch" pitfall
+       flagged for this phase: it wouldn't error anywhere, it would just
+       silently corrupt every downstream perception transform in Phase 4. -->
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_link_optical"/>
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <link name="camera_link_optical"/>
+
+  <!-- rgbd_camera publishes both a color image and a depth image/point
+       cloud from one sensor definition. optical_frame_id tells the
+       plugin to stamp published image/camera_info/points messages with
+       camera_link_optical, not camera_link; without this, messages
+       would carry the wrong frame_id despite the TF tree itself being
+       correct, which is a more subtle version of the same pitfall (the
+       geometry would be right, but nothing consuming the data would look
+       up the correct transform). -->
+  <gazebo reference="camera_link">
+    <sensor name="camera" type="rgbd_camera">
+      <always_on>true</always_on>
+      <!-- Requested 15Hz initially, matching a real RGB-D sensor's
+           typical datasheet rate. Measured actual throughput in this VM
+           was ~2.5Hz; the render pass for this sensor competes with
+           Gazebo's own GUI viewport for the same virtualized GPU, and a
+           requested rate is a target, not a guarantee, so the real rate
+           just falls behind under load. 5 is set here as an honest
+           number closer to what's actually sustained, not as a fix for
+           the underlying rendering cost. -->
+      <update_rate>5</update_rate>
+      <visualize>true</visualize>
+      <topic>camera</topic>
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>10.0</far>
+        </clip>
+        <depth_camera>
+          <clip>
+            <near>0.1</near>
+            <far>10.0</far>
+          </clip>
+        </depth_camera>
+        <optical_frame_id>camera_link_optical</optical_frame_id>
+      </camera>
+    </sensor>
+  </gazebo>
+
+</robot>
