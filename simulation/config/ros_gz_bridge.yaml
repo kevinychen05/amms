@@ -70,9 +70,10 @@
 # name (something like "amms_robot/base_footprint/lidar") instead of our
 # URDF's actual "lidar_link" frame -- a frame that plain doesn't exist in
 # our TF tree. The range/angle data itself is correct; only the label is
-# wrong. scripts/fix_lidar_frame.py republishes this as /scan with the
-# frame_id corrected, so /scan (the name Nav2/slam_toolbox expect in
-# Phase 3) always carries a resolvable frame.
+# wrong. scripts/scan_filter.py republishes this as /scan with the
+# frame_id corrected (and short self-hit readings from the robot's own
+# arm filtered out), so /scan (the name Nav2/slam_toolbox expect) always
+# carries a resolvable frame and clean data.
 - ros_topic_name: "/scan_raw"
   gz_topic_name: "/scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"

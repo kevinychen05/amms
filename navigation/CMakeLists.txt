@@ -3,6 +3,14 @@ project(navigation)
 
 find_package(ament_cmake REQUIRED)
 
-# Phase 3 will add: install(DIRECTORY config launch maps DESTINATION share/${PROJECT_NAME})
+install(
+  DIRECTORY config launch maps
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS scripts/send_nav_goal.py scripts/run_success_trials.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
