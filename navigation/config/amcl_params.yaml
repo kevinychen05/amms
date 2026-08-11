@@ -1,0 +1,68 @@
+# Based on nav2_bringup's own reference nav2_params.yaml amcl section.
+# Two values changed; everything else already fits this robot exactly
+# (DifferentialMotionModel matches our DiffDrive base; map/odom/
+# base_footprint frame names already match our Phase 2 TF tree;
+# scan_topic already matches our corrected /scan). That's worth recording
+# as a decision too: most of this config needed no adaptation at all.
+amcl:
+  ros__parameters:
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "base_footprint"
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: "map"
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+
+    # Non-default: matched to our lidar's actual configured max range
+    # (robot_description/urdf/lidar.xacro: <max>15.0</max>), not the
+    # reference's arbitrary 100.0. laser_min_range is left at -1.0
+    # deliberately -- that value means "auto-detect from the sensor's own
+    # reported range_min," a self-adapting convention AMCL provides that
+    # slam_toolbox's equivalent parameter did not, so there's nothing to
+    # hardcode here.
+    laser_max_range: 15.0
+    laser_min_range: -1.0
+
+    laser_model_type: "likelihood_field"
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    odom_frame_id: "odom"
+    pf_err: 0.05
+    pf_z: 0.99
+    # Non-default: this room has a near-total 180-degree rotational
+    # symmetry (shelf_a at (-1.5, 1.5) and shelf_b at (1.5, -1.5) are
+    # exact negatives of each other; the pillar at (2.5, 2.5) is the only
+    # asymmetric feature). With both alphas at the reference default of
+    # 0.0, AMCL converged confidently onto the mirrored (180-degree
+    # rotated) pose -- confirmed against Gazebo's own ground-truth pose,
+    # not just our own odometry, which by that point had also drifted
+    # from extended driving. recovery_alpha_fast/slow enable AMCL to
+    # inject freshly-scattered random particles when recent measurement
+    # likelihood drops relative to the longer-term average -- exactly
+    # what's needed to escape a locally-confident-but-wrong hypothesis
+    # once the pillar mismatch starts scoring poorly. 0.1/0.001 is the
+    # commonly-recommended pairing (fast well above slow) from AMCL's own
+    # documentation, not independently tuned by us.
+    recovery_alpha_fast: 0.1
+    recovery_alpha_slow: 0.001
+    resample_interval: 1
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.25
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: scan

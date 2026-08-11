@@ -142,12 +142,16 @@
       </link>
     </model>
 
-    <!-- Interior obstacles: two "shelf" blocks forming a corridor down
-         the middle, plus one isolated block; gives SLAM (Phase 3)
-         distinguishable landmarks and a mix of a narrow passage and open
-         floor space, rather than one big empty box. Colored distinctly
-         (not gray like the walls) purely so a human watching the sim can
-         tell obstacles apart from walls at a glance. -->
+    <!-- Interior obstacles: two "shelf" blocks and one pillar, positioned
+         diagonally across the room from each other (not forming a
+         corridor with each other, despite what an earlier version of
+         this comment claimed: the tightest gap between any two of
+         these, or between one of these and a wall, is over 2m, too open
+         to exercise costmap-inflation-vs-corridor-width tuning). Colored
+         distinctly (not gray like the walls) purely so a human watching
+         the sim can tell obstacles apart from walls at a glance. The
+         partition wall below, added in Phase 3, is what actually
+         provides a real narrow passage. -->
     <model name="shelf_a">
       <static>true</static>
       <pose>-1.5 1.5 0.5 0 0 0</pose>
@@ -186,6 +190,125 @@
         <visual name="visual">
           <geometry><cylinder><radius>0.3</radius><length>1</length></cylinder></geometry>
           <material><ambient>0.1 0.3 0.6 1</ambient><diffuse>0.1 0.3 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Additional warehouse dressing, added when expanding the room
+         past Phase 2's original sparse layout. Gives each half of the
+         partition wall below its own character (west: crate cluster +
+         second pillar; east: second shelf) and more varied SLAM
+         landmarks (a clustered group of small boxes reads very
+         differently in a lidar scan than one long shelf), while staying
+         clear of the partition's narrow passage and every existing
+         obstacle; checked individually below, not just placed by eye. -->
+
+    <model name="crate_1">
+      <static>true</static>
+      <pose>-3.2 -3.2 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+          <material><ambient>0.7 0.6 0.2 1</ambient><diffuse>0.7 0.6 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="crate_2">
+      <static>true</static>
+      <pose>-2.6 -3.2 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.5 0.5 0.6</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.5 0.5 0.6</size></box></geometry>
+          <material><ambient>0.7 0.6 0.2 1</ambient><diffuse>0.7 0.6 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="crate_3">
+      <static>true</static>
+      <pose>-2.9 -2.6 0.2 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.4 0.4 0.4</size></box></geometry>
+          <material><ambient>0.7 0.6 0.2 1</ambient><diffuse>0.7 0.6 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="pillar_2">
+      <static>true</static>
+      <pose>-3.5 3.5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.3</radius><length>1</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.3</radius><length>1</length></cylinder></geometry>
+          <material><ambient>0.1 0.3 0.6 1</ambient><diffuse>0.1 0.3 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="shelf_c">
+      <static>true</static>
+      <pose>3.5 1 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.5 2 1</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.5 2 1</size></box></geometry>
+          <material><ambient>0.6 0.3 0.1 1</ambient><diffuse>0.6 0.3 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Partition wall along x=0, splitting the room into east/west
+         halves connected only through a 1.0m gap centered at y=0, a
+         genuine narrow passage (Phase 2's shelves, despite that
+         package's original comment, never actually formed one; see
+         above). 1.0m was chosen deliberately: our robot's footprint is
+         only 0.4m long, so a naive inflation_radius (Phase 3's default,
+         copied from nav2_bringup's TB3 reference, is 0.70m) inflating
+         0.70m in from EACH side would overlap by 0.4m in the middle of
+         this exact gap, giving a concrete, room-specific way to observe
+         and fix the "over-tightened inflation blocks a passable
+         corridor" pitfall, rather than only demonstrating it in the
+         abstract. -->
+    <model name="partition_south">
+      <static>true</static>
+      <pose>0 -2.75 1 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.2 4.5 2</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 4.5 2</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="partition_north">
+      <static>true</static>
+      <pose>0 2.75 1 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.2 4.5 2</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 4.5 2</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
         </visual>
       </link>
     </model>

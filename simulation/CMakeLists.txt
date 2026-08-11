@@ -9,7 +9,7 @@ install(
 )
 
 install(
-  PROGRAMS scripts/fix_lidar_frame.py
+  PROGRAMS scripts/scan_filter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

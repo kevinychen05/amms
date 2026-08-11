@@ -118,12 +118,14 @@ def generate_launch_description():
         output='screen',
     )
 
-    # See ros_gz_bridge.yaml for why this exists: the lidar's LaserScan
-    # messages arrive on /scan_raw stamped with a frame_id that isn't a
-    # real TF frame. This republishes as /scan with the frame corrected.
-    fix_lidar_frame = Node(
+    # See ros_gz_bridge.yaml and scan_filter.py for why this exists: the
+    # lidar's LaserScan messages arrive on /scan_raw stamped with a
+    # frame_id that isn't a real TF frame, and also carry short "self-hit"
+    # readings from the robot's own (currently uncontrolled) arm sagging
+    # into the scan plane. This republishes as /scan with both corrected.
+    scan_filter = Node(
         package='simulation',
-        executable='fix_lidar_frame.py',
+        executable='scan_filter.py',
         output='screen',
         parameters=[{'use_sim_time': True}],
     )
@@ -151,6 +153,6 @@ def generate_launch_description():
         spawn_robot,
         bridge,
         point_cloud_container,
-        fix_lidar_frame,
+        scan_filter,
         rviz,
     ])
