@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'perception_node = perception.perception_node:main',
+            'stress_test = perception.stress_test:main',
         ],
     },
 )

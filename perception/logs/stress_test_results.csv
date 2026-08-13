@@ -1,0 +1,5 @@
+condition,frames_sampled,detections,detection_rate_pct,mean_confidence
+baseline,29,20,69.0,0.258
+occlusion,34,0,0.0,0.0
+poor_lighting,33,0,0.0,0.0
+edge_of_fov,32,0,0.0,0.0
