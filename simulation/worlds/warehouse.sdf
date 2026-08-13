@@ -313,5 +313,29 @@
       </link>
     </model>
 
+    <!-- Phase 4 target object: a mug-sized red cylinder. Sized/colored to
+         be a plausible match for COCO's "cup" class (a pretrained YOLO
+         model was never trained on our fabricated warehouse geometry, so
+         crates/shelves/pillars aren't detectable as anything meaningful;
+         this is the one object in the world a stock detector can actually
+         recognize). Static for now since Phase 4 is perception-only;
+         Phase 5 will need to revisit this as a dynamic, graspable body.
+         Placed in open space (east side, clear of shelf_c/pillar) so it's
+         easy to navigate the camera toward without other obstacles in
+         the way for initial detector testing. -->
+    <model name="target_mug">
+      <static>true</static>
+      <pose>1.0 1.0 0.05 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.04</radius><length>0.10</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.04</radius><length>0.10</length></cylinder></geometry>
+          <material><ambient>0.8 0.05 0.05 1</ambient><diffuse>0.8 0.05 0.05 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
   </world>
 </sdf>
